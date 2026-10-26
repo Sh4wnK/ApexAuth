@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Authorize - ApexAuth</title>
+<style>
+  :root { --bg:#0f1115; --fg:#e6e8eb; --muted:#9aa3af; --accent:#4c8dff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--fg); display:flex; min-height:100vh; align-items:center; justify-content:center; }
+  .card { width:420px; max-width:92vw; background:#161a21; border:1px solid #262c36; border-radius:12px; padding:32px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  p { color:var(--muted); font-size:14px; margin:6px 0; }
+  .scopes { margin:20px 0; }
+  .scope { display:flex; align-items:center; gap:10px; padding:10px; border:1px solid #262c36; border-radius:8px; margin-bottom:8px; font-size:14px; }
+  .actions { display:flex; gap:12px; margin-top:24px; }
+  button { flex:1; padding:11px; border:0; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+  .allow { background:var(--accent); color:#fff; }
+  .deny { background:#262c36; color:var(--fg); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Authorize {{ .ClientName }}</h1>
+    <p>Signed in as <strong>{{ .UserEmail }}</strong></p>
+    <p>{{ .ClientName }} wants permission to:</p>
+    <div class="scopes">
+      {{ range .Scopes }}<div class="scope">&bull; {{ . }}</div>{{ end }}
+    </div>
+    <form method="post" action="/oauth2/consent">
+      <input type="hidden" name="client_id" value="{{ .ClientID }}">
+      <input type="hidden" name="redirect_uri" value="{{ .RedirectURI }}">
+      <input type="hidden" name="response_type" value="{{ .ResponseType }}">
+      <input type="hidden" name="state" value="{{ .State }}">
+      <input type="hidden" name="nonce" value="{{ .Nonce }}">
+      <input type="hidden" name="scope" value="{{ .Scope }}">
+      <input type="hidden" name="code_challenge" value="{{ .CodeChallenge }}">
+      <input type="hidden" name="code_challenge_method" value="{{ .CodeChallengeMethod }}">
+      <div class="actions">
+        <button type="submit" name="decision" value="allow" class="allow">Allow</button>
+        <button type="submit" name="decision" value="deny" class="deny">Deny</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

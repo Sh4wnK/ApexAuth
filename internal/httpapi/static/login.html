@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in - ApexAuth</title>
+<style>
+  :root { --bg:#0f1115; --fg:#e6e8eb; --muted:#9aa3af; --accent:#4c8dff; --danger:#ff5c5c; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--fg); display:flex; min-height:100vh; align-items:center; justify-content:center; }
+  .card { width: 380px; max-width: 92vw; background:#161a21; border:1px solid #262c36; border-radius:12px; padding:32px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  p.sub { color:var(--muted); font-size:13px; margin:0 0 24px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:14px 0 6px; }
+  input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #2c3440; background:#0f1115; color:var(--fg); font-size:14px; }
+  input:focus { outline:none; border-color:var(--accent); }
+  button { width:100%; margin-top:20px; padding:11px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+  button:hover { filter:brightness(1.1); }
+  .error { background:#2a1517; border:1px solid var(--danger); color:var(--danger); border-radius:8px; padding:10px 12px; font-size:13px; margin-top:16px; }
+  .alt { text-align:center; margin-top:18px; font-size:13px; color:var(--muted); }
+  .alt a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sign in to ApexAuth</h1>
+    <p class="sub">{{ .ClientName }} is requesting access to your account.</p>
+    {{ if .Error }}<div class="error">{{ .Error }}</div>{{ end }}
+    <form method="post" action="/login">
+      <input type="hidden" name="client_id" value="{{ .ClientID }}">
+      <input type="hidden" name="redirect_uri" value="{{ .RedirectURI }}">
+      <input type="hidden" name="response_type" value="{{ .ResponseType }}">
+      <input type="hidden" name="state" value="{{ .State }}">
+      <input type="hidden" name="nonce" value="{{ .Nonce }}">
+      <input type="hidden" name="scope" value="{{ .Scope }}">
+      <input type="hidden" name="code_challenge" value="{{ .CodeChallenge }}">
+      <input type="hidden" name="code_challenge_method" value="{{ .CodeChallengeMethod }}">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required autocomplete="username" placeholder="you@example.com">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+      <button type="submit">Sign in</button>
+    </form>
+    <div class="alt">
+      <a href="/auth/magic?{{ .Query }}">Email me a magic link</a> &middot;
+      <a href="/auth/otp?{{ .Query }}">Send a one-time code</a>
+    </div>
+  </div>
+</body>
+</html>

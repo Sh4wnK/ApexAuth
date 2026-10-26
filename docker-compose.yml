@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: apexauth
+      POSTGRES_PASSWORD: apexauth
+      POSTGRES_DB: apexauth
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apexauth -d apexauth"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  apexauth:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APEXAUTH_HTTP_ADDR: ":8080"
+      APEXAUTH_GRPC_ADDR: ":9090"
+      APEXAUTH_BASE_URL: "http://localhost:8080"
+      APEXAUTH_PG_DSN: "postgres://apexauth:apexauth@postgres:5432/apexauth?sslmode=disable"
+      APEXAUTH_REDIS_ADDR: "redis:6379"
+      APEXAUTH_CACHE: "true"
+      APEXAUTH_HMAC_SECRET: "${APEXAUTH_HMAC_SECRET:-change-me-32-chars-minimum!!}"
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+
+  seed:
+    build: .
+    command: ["seed"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APEXAUTH_PG_DSN: "postgres://apexauth:apexauth@postgres:5432/apexauth?sslmode=disable"
+      APEXAUTH_SEED_USERS: "1000"
+    restart: "no"
+
+  example-app:
+    build: .
+    command: ["sso-client"]
+    depends_on:
+      - apexauth
+    environment:
+      SSO_ISSUER: "http://localhost:8080"
+      SSO_PUBLIC_HOST: "http://localhost:8090"
+      SSO_CLIENT_ID: "example-app"
+      SSO_CLIENT_SECRET: "example-secret-change-me"
+    ports:
+      - "8090:8090"
+
+volumes:
+  pgdata:

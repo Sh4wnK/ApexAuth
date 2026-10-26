@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package apexauth.v1;
+
+option go_package = "github.com/Sh4wnK/ApexAuth/gen/apexauth/v1;apexauthv1";
+
+// AuthService exposes token validation, permission checks and user lookup.
+// Every request must carry a valid access token in the gRPC metadata key
+// "authorization" (Bearer <token>), enforced by the auth interceptor on
+// calls that are not explicitly marked public.
+service AuthService {
+  // ValidateToken checks signature, expiry, revocation and session state of
+  // an access token and returns the token principal.
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  // CheckPermission evaluates the caller's permissions (including wildcards
+  // such as "billing:*") against a required permission string.
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  // GetUser returns a user by id or email.
+  rpc GetUser(GetUserRequest) returns (User);
+  // ListUserRoles returns the caller's (or an admin-specified user's) roles.
+  rpc ListUserRoles(ListUserRolesRequest) returns (ListUserRolesResponse);
+}
+
+// AdminService contains privileged operations. Each method checks admin
+// RBAC permissions server-side; the service is meant to be proxied
+// (optionally over connect/grpc-gateway) from the admin REST API.
+service AdminService {
+  rpc CreateRole(CreateRoleRequest) returns (Role);
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc AssignRole(AssignRoleRequest) returns (AssignRoleResponse);
+  rpc RevokeRole(RevokeRoleRequest) returns (RevokeRoleResponse);
+  rpc CreatePermission(CreatePermissionRequest) returns (Permission);
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  bool email_verified = 4;
+  bool active = 5;
+  repeated string roles = 6;
+  repeated string permissions = 7;
+  int64 created_at = 8;
+}
+
+message Role {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permissions = 4;
+}
+
+message Permission {
+  string id = 1;
+  string resource = 2;
+  string action = 3;
+  string description = 4;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string email = 3;
+  string jti = 4;
+  int64 expires_at = 5;
+  repeated string roles = 6;
+  repeated string permissions = 7;
+  string error = 8;
+}
+
+message CheckPermissionRequest {
+  string permission = 1;
+  // user_id overrides the token principal; only allowed for admins.
+  string user_id = 2;
+}
+
+message CheckPermissionResponse {
+  bool allowed = 1;
+}
+
+message GetUserRequest {
+  string user_id = 1;
+  string email = 2;
+}
+
+message ListUserRolesRequest {
+  string user_id = 1;
+}
+
+message ListUserRolesResponse {
+  repeated Role roles = 1;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+  string description = 2;
+  repeated string permissions = 3;
+}
+
+message ListRolesRequest {
+  string user_id = 1;
+}
+
+message ListRolesResponse {
+  repeated Role roles = 1;
+}
+
+message AssignRoleRequest {
+  string user_id = 1;
+  string role_name = 2;
+}
+
+message AssignRoleResponse {
+  bool assigned = 1;
+}
+
+message RevokeRoleRequest {
+  string user_id = 1;
+  string role_name = 2;
+}
+
+message RevokeRoleResponse {
+  bool revoked = 1;
+}
+
+message CreatePermissionRequest {
+  string resource = 1;
+  string action = 2;
+  string description = 3;
+}
+
+message ListPermissionsRequest {
+  string role_name = 1;
+}
+
+message ListPermissionsResponse {
+  repeated Permission permissions = 1;
+}

@@ -1,0 +1,23 @@
+# Binaries / build output
+/apexauth
+/seed
+/bench
+/sso-client
+/bin/
+/out/
+
+# Go
+*.test
+*.out
+coverage.*
+
+# Env / secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Editors
+.idea/
+.vscode/
